@@ -23,6 +23,7 @@ services:
   # a single node instance.
   etcd:
     image: quay.io/coreos/etcd:v2.3.3
+    container_name: autoproxy_etcd
     command: >-
       --name etcd0
       --initial-cluster etcd0=http://127.0.0.1:2380
@@ -39,6 +40,7 @@ services:
   # in etcd up-to-date.
   reporter:
     image: csmith/service-reporter:latest
+    container_name: autoproxy_reporter
     links:
       - etcd:etcd
     volumes:
@@ -53,6 +55,7 @@ services:
   # the letsencrypt-* containers below.
   letsencrypt-updater:
     image: csmith/service-letsencrypt:latest
+    container_name: autoproxy_letsencrypt-updater
     volumes:
       - letsencrypt-data:/letsencrypt
     networks:
@@ -65,6 +68,7 @@ services:
   # need to set the provider and auth tokens below.
   letsencrypt-lexicon:
     image: csmith/letsencrypt-lexicon:latest
+    container_name: autoproxy_letsencrypt-lexicon
     volumes:
       - letsencrypt-data:/letsencrypt
     environment:
@@ -91,6 +95,7 @@ services:
   # proxying to the containers.
   nginx-updater:
     image: csmith/service-nginx:latest
+    container_name: autoproxy_nginx-updater
     volumes:
       - nginx-config:/nginx-config
     networks:
@@ -103,10 +108,10 @@ services:
   # non-default networks, you'll need to specify them here and
   # below in the top-level networks section.
   #
-  # TODO: Automatically reload config when changed
   # TODO: Redirect HTTP and add proper SSL options
   nginx:
     image: nginx:1.9
+    container_name: autoproxy_nginx
     volumes:
       - nginx-config:/etc/nginx/conf.d
       - letsencrypt-data:/letsencrypt
@@ -116,6 +121,21 @@ services:
     networks:
       - default
     # - mynetwork
+
+  # We use inotify-signal-container to monitor for nginx config
+  # file and SSL cert changes (using inotify) and send nginx a
+  # SIGHUP signal.
+  nginx-config-hupper:
+    image: masm/inotify-signal-container:latest
+    container_name: autoproxy_nginx-config-hupper
+    volumes:
+      - nginx-config:/monitor/nginx
+      - letsencrypt-data:/monitor/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - autoproxy_nginx-proxy
+      - SIGHUP
+      - /monitor
 
 volumes:
 
