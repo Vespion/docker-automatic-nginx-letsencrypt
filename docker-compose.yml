@@ -1,0 +1,132 @@
+---
+
+# Sets up a series of containers to automatically provision SSL certificates
+# and configure nginx for reverse proxying. Containers that should be proxied
+# need to be labelled with the following:
+#
+#   com.chameth.vhost="main.domain.com,alternate.domain.com,alt2.com,..."
+#   com.chameth.proxy=80
+#   com.chameth.proxy.protocol=http [optional, defaults to http]
+#
+# To prove ownership of domains to Let's Encrypt, we add a DNS entry when
+# required. You will need to configure one of the letsencrypt-* services
+# below to make these changes.
+
+version: '2'
+
+services:
+
+  # etcd is a key-value server. We use it to store meta-data about docker
+  # containers which is then read by the service containers below.
+  #
+  # etcd can be distributed and accessed remotely, but this config is for
+  # a single node instance.
+  etcd:
+    image: quay.io/coreos/etcd:v2.3.3
+    command: >-
+      --name etcd0
+      --initial-cluster etcd0=http://127.0.0.1:2380
+      --initial-advertise-peer-urls http://127.0.0.1:2380
+      --initial-cluster-state new
+      --initial-cluster-token etcd-cluster-1
+      --bind-addr 0.0.0.0:2379
+    networks:
+      - etcd-services
+
+  # service-reporter interacts with docker (which is why it needs the
+  # docker.sock mounted) to get a list of current containers, and
+  # monitor when containers are added or removed. It keeps the information
+  # in etcd up-to-date.
+  reporter:
+    image: csmith/service-reporter:latest
+    links:
+      - etcd:etcd
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - etcd-services
+    depends_on:
+      - etcd
+
+  # service-letsencrypt reads a list of vhosts from container labels
+  # (via etcd), and prepares a domains.txt file to send on to one of
+  # the letsencrypt-* containers below.
+  letsencrypt-updater:
+    image: csmith/service-letsencrypt:latest
+    volumes:
+      - letsencrypt-data:/letsencrypt
+    networks:
+      - etcd-services
+    depends_on:
+      - etcd
+
+  # letsencrypt-lexicon obtains Let's Encrypt certificates by modifying
+  # DNS records. It supports several major cloud DNS providers. You
+  # need to set the provider and auth tokens below.
+  letsencrypt-lexicon:
+    image: csmith/letsencrypt-lexicon:latest
+    volumes:
+      - letsencrypt-data:/letsencrypt
+    environment:
+      - STAGING=yes
+      - EMAIL=your@email.addr
+      - PROVIDER=cloudflare
+      - LEXICON_CLOUDFLARE_USERNAME=your@email.addr
+      - LEXICON_CLOUDFLARE_TOKEN=1234567890123456789012345678901234567890
+
+  # letsencrypt-generic uses a user-defined hook to update DNS entries.
+  # You need to supply your own hook, available at /dns/hook. See the
+  # letsencrypt.sh repo for details about hook arguments.
+  #letsencrypt-generic:
+  #  image: csmith/letsencrypt-generic:latest
+  #  volumes:
+  #    - letsencrypt-data:/letsencrypt
+  #    - /my/hook/script:/dns/hook
+  #  environment:
+  #    - STAGING=yes
+  #    - EMAIL=your@email.addr
+
+  # service-nginx reads proxy information and vhosts from etcd and
+  # creates an nginx vhost config to enable SSL-terminated reverse
+  # proxying to the containers.
+  nginx-updater:
+    image: csmith/service-nginx:latest
+    volumes:
+      - nginx-config:/nginx-config
+    networks:
+      - etcd-services
+    depends_on:
+      - etcd
+
+  # Finally, nginx is what actually does the SSL termination and
+  # reverse proxying. If any containers to be proxied are on
+  # non-default networks, you'll need to specify them here and
+  # below in the top-level networks section.
+  #
+  # TODO: Automatically reload config when changed
+  # TODO: Redirect HTTP and add proper SSL options
+  nginx:
+    image: nginx:1.9
+    volumes:
+      - nginx-config:/etc/nginx/conf.d
+      - letsencrypt-data:/letsencrypt
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - default
+    # - mynetwork
+
+volumes:
+
+  letsencrypt-data:
+
+  nginx-config:
+
+networks:
+
+  etcd-services:
+
+  # To add pre-existing networks, mark them as 'external':
+  #mynetwork:
+  #  external: true
