@@ -133,7 +133,7 @@ services:
       - letsencrypt-data:/monitor/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock
     command:
-      - autoproxy_nginx-proxy
+      - autoproxy_nginx
       - SIGHUP
       - /monitor
 
