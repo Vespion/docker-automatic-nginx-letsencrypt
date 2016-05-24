@@ -104,11 +104,9 @@ services:
       - etcd
 
   # Finally, nginx is what actually does the SSL termination and
-  # reverse proxying. If any containers to be proxied are on
-  # non-default networks, you'll need to specify them here and
-  # below in the top-level networks section.
-  #
-  # TODO: Redirect HTTP and add proper SSL options
+  # reverse proxying. Because it needs to connect to containers
+  # on (potentially) many different networks, we set the
+  # network_mode to host.
   nginx:
     image: nginx:1.9
     container_name: autoproxy_nginx
@@ -118,9 +116,7 @@ services:
     ports:
       - 80:80
       - 443:443
-    networks:
-      - default
-    # - mynetwork
+    network_mode: host
 
   # We use inotify-signal-container to monitor for nginx config
   # file and SSL cert changes (using inotify) and send nginx a
@@ -147,6 +143,3 @@ networks:
 
   etcd-services:
 
-  # To add pre-existing networks, mark them as 'external':
-  #mynetwork:
-  #  external: true
