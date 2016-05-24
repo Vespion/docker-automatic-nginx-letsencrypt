@@ -24,6 +24,7 @@ services:
   etcd:
     image: quay.io/coreos/etcd:v2.3.3
     container_name: autoproxy_etcd
+    restart: always
     command: >-
       --name etcd0
       --initial-cluster etcd0=http://127.0.0.1:2380
@@ -41,6 +42,7 @@ services:
   reporter:
     image: csmith/service-reporter:latest
     container_name: autoproxy_reporter
+    restart: always
     links:
       - etcd:etcd
     volumes:
@@ -56,6 +58,7 @@ services:
   letsencrypt-updater:
     image: csmith/service-letsencrypt:latest
     container_name: autoproxy_letsencrypt-updater
+    restart: always
     volumes:
       - letsencrypt-data:/letsencrypt
     networks:
@@ -69,6 +72,7 @@ services:
   letsencrypt-lexicon:
     image: csmith/letsencrypt-lexicon:latest
     container_name: autoproxy_letsencrypt-lexicon
+    restart: always
     volumes:
       - letsencrypt-data:/letsencrypt
     environment:
@@ -83,6 +87,8 @@ services:
   # letsencrypt.sh repo for details about hook arguments.
   #letsencrypt-generic:
   #  image: csmith/letsencrypt-generic:latest
+  #  container_name: autoproxy_letsencrypt-generic
+  #  restart: always
   #  volumes:
   #    - letsencrypt-data:/letsencrypt
   #    - /my/hook/script:/dns/hook
@@ -96,6 +102,7 @@ services:
   nginx-updater:
     image: csmith/service-nginx:latest
     container_name: autoproxy_nginx-updater
+    restart: always
     volumes:
       - nginx-config:/nginx-config
     networks:
@@ -110,6 +117,7 @@ services:
   nginx:
     image: nginx:1.9
     container_name: autoproxy_nginx
+    restart: always
     volumes:
       - nginx-config:/etc/nginx/conf.d
       - letsencrypt-data:/letsencrypt
@@ -124,6 +132,7 @@ services:
   nginx-config-hupper:
     image: masm/inotify-signal-container:latest
     container_name: autoproxy_nginx-config-hupper
+    restart: always
     volumes:
       - nginx-config:/monitor/nginx
       - letsencrypt-data:/monitor/letsencrypt
