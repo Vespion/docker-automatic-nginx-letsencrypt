@@ -115,7 +115,7 @@ services:
   # on (potentially) many different networks, we set the
   # network_mode to host.
   nginx:
-    image: nginx:1.9
+    image: nginx:1.11
     container_name: autoproxy_nginx
     restart: always
     volumes:
