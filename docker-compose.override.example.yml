@@ -1,0 +1,18 @@
+---
+version: '2'
+
+services:
+
+  letsencrypt-lexicon:
+    environment:
+      # For testing purposes, use the Let's Encrypt staging server.
+      # Remove this for production use!
+      - STAGING=yes
+      # The e-mail address to provide to Let's Encrypt.
+      - EMAIL=your@email.addr
+      # The Lexicon provider to use
+      - PROVIDER=cloudflare
+      # Provider-specific authentication details
+      - LEXICON_CLOUDFLARE_USERNAME=your@email.addr
+      - LEXICON_CLOUDFLARE_TOKEN=1234567890123456789012345678901234567890
+

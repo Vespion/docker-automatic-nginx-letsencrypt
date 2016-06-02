@@ -9,8 +9,9 @@
 #   com.chameth.proxy.protocol=http [optional, defaults to http]
 #
 # To prove ownership of domains to Let's Encrypt, we add a DNS entry when
-# required. You will need to configure one of the letsencrypt-* services
-# below to make these changes.
+# required. This requires you to provide authentication details (e-mail
+# address, API key, password, etc). These should be specified in a
+# docker-compose.override.yml file.
 
 version: '2'
 
@@ -67,20 +68,13 @@ services:
       - etcd
 
   # letsencrypt-lexicon obtains Let's Encrypt certificates by modifying
-  # DNS records. It supports several major cloud DNS providers. You
-  # need to set the provider and auth tokens below.
+  # DNS records. It supports several major cloud DNS providers.
   letsencrypt-lexicon:
     image: csmith/letsencrypt-lexicon:latest
     container_name: autoproxy_letsencrypt-lexicon
     restart: always
     volumes:
       - letsencrypt-data:/letsencrypt
-    environment:
-      - STAGING=yes
-      - EMAIL=your@email.addr
-      - PROVIDER=cloudflare
-      - LEXICON_CLOUDFLARE_USERNAME=your@email.addr
-      - LEXICON_CLOUDFLARE_TOKEN=1234567890123456789012345678901234567890
 
   # letsencrypt-generic uses a user-defined hook to update DNS entries.
   # You need to supply your own hook, available at /dns/hook. See the
@@ -92,9 +86,6 @@ services:
   #  volumes:
   #    - letsencrypt-data:/letsencrypt
   #    - /my/hook/script:/dns/hook
-  #  environment:
-  #    - STAGING=yes
-  #    - EMAIL=your@email.addr
 
   # service-nginx reads proxy information and vhosts from etcd and
   # creates an nginx vhost config to enable SSL-terminated reverse
