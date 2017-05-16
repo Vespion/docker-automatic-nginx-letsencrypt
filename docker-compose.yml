@@ -117,21 +117,20 @@ services:
       - 443:443
     network_mode: host
 
-  # We use inotify-signal-container to monitor for nginx config
-  # file and SSL cert changes (using inotify) and send nginx a
-  # SIGHUP signal.
+  # We use this container to monitor for nginx config file and SSL cert changes
+  # (using inotify) and send nginx a SIGHUP signal.
   nginx-config-hupper:
-    image: masm/inotify-signal-container:latest
+    image: pstauffer/inotify:latest
     container_name: autoproxy_nginx-config-hupper
     restart: always
     volumes:
       - nginx-config:/monitor/nginx
       - letsencrypt-data:/monitor/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock
-    command:
-      - autoproxy_nginx
-      - SIGHUP
-      - /monitor
+    environment:
+      - 'CONTAINER=autoproxy_nginx'
+      - 'VOLUMES=/monitor'
+      - 'INOTIFY_OPTONS=--monitor --exclude=*.sw[px] --recursive'
 
 volumes:
 
