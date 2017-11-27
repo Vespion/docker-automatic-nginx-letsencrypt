@@ -96,6 +96,7 @@ services:
     restart: always
     volumes:
       - nginx-config:/nginx-config
+      - letsencrypt-data:/letsencrypt
     networks:
       - etcd-services
     depends_on:
