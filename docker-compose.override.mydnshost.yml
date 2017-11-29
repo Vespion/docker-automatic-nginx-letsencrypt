@@ -1,0 +1,24 @@
+---
+version: '2'
+
+services:
+
+  # letsencrypt-mydnshost obtains Let's Encrypt certificates by modifying
+  # DNS records for domains hosted at mydnshost.co.uk.
+  letsencrypt-mydnshost:
+    image: csmith/letsencrypt-mydnshost:latest
+    container_name: autoproxy_letsencrypt-mydnshost
+    restart: always
+    volumes:
+      - letsencrypt-data:/letsencrypt
+    environment:
+      # For testing purposes, use the Let's Encrypt staging server.
+      # Remove this for production use!
+      - STAGING=yes
+      # To accept Let's Encrypt's temrs of service automatically:
+      #- ACCEPT_CA_TERMS=yes
+      # The e-mail address to provide to Let's Encrypt.
+      - EMAIL=your@email.addr
+      # The account and API key to use for MyDNSHost
+      - MYDNSHOST_AUTH_USER=your@email.addr
+      - MYDNSHOST_AUTH_KEY=1234567890123456789012345678901234567890

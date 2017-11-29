@@ -67,26 +67,6 @@ services:
     depends_on:
       - etcd
 
-  # letsencrypt-lexicon obtains Let's Encrypt certificates by modifying
-  # DNS records. It supports several major cloud DNS providers.
-  letsencrypt-lexicon:
-    image: csmith/letsencrypt-lexicon:latest
-    container_name: autoproxy_letsencrypt-lexicon
-    restart: always
-    volumes:
-      - letsencrypt-data:/letsencrypt
-
-  # letsencrypt-generic uses a user-defined hook to update DNS entries.
-  # You need to supply your own hook, available at /dns/hook. See the
-  # letsencrypt.sh repo for details about hook arguments.
-  #letsencrypt-generic:
-  #  image: csmith/letsencrypt-generic:latest
-  #  container_name: autoproxy_letsencrypt-generic
-  #  restart: always
-  #  volumes:
-  #    - letsencrypt-data:/letsencrypt
-  #    - /my/hook/script:/dns/hook
-
   # service-nginx reads proxy information and vhosts from etcd and
   # creates an nginx vhost config to enable SSL-terminated reverse
   # proxying to the containers.

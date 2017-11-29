@@ -9,13 +9,27 @@ is described in [this blog post](https://www.chameth.com/2016/05/21/docker-autom
 
 ## Getting started
 
-The out-of-the-box setup uses [Lexicon](https://github.com/AnalogJ/lexicon)
-to perform DNS updates. This will work if you use one DNS provider for all
-the domains you wish to use, and Lexicon supports that provider. If that
-is the case, then getting started is very easy:
+This repository contains configuration for four different methods of obtaining
+Let's Encrypt certificates:
 
- 1. Copy docker-compose.override.example.yml to docker-compose.override.yml
- 2. Change the e-mail address, provider, and provider auth details
+ * **`docker-compose.override.generic.yml`** - a generic solution for obtaining
+   certificates using DNS entries. You must supply a
+   [Dehydrated](https://github.com/lukas2511/dehydrated) hook that will add and
+   remove DNS entries as needed.
+ * **`docker-compose.override.lexicon.yml`** - uses the
+   [Lexicon](https://github.com/AnalogJ/lexicon) library to perform DNS updates
+   for major cloud DNS providers.
+ * **`docker-compose.override.mydnshost.yml`** - uses the
+   [MyDNSHost](https://mydnshost.co.uk) API to perform DNS updates for domains
+   hosted there
+ * **`docker-compose.override.http.yml`** - performs a HTTP challenge instead of
+   using DNS, saving the response to disk so it can be served by Nginx.
+
+To get started:
+
+ 1. Copy the relevant docker-compose.override.\*.yml file to
+    docker-compose.override.yml
+ 2. Change any settings (auth token, staging environment, etc)
  3. Run `docker-compose up -d`
 
 If you have existing containers with the appropriate labels, the certificates

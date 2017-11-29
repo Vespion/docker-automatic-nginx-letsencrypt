@@ -1,0 +1,23 @@
+---
+version: '2'
+
+services:
+
+  # letsencrypt-http uses the HTTP-01 challenge to verify ownership. The
+  # well-known files must be served by a webserver.
+  letsencrypt-http:
+    image: csmith/letsencrypt-http-01:latest
+    container_name: autoproxy_letsencrypt-http
+    restart: always
+    volumes:
+      - letsencrypt-data:/letsencrypt
+    environment:
+      # For testing purposes, use the Let's Encrypt staging server.
+      # Remove this for production use!
+      - STAGING=yes
+      # To accept Let's Encrypt's temrs of service automatically:
+      #- ACCEPT_CA_TERMS=yes
+      # The e-mail address to provide to Let's Encrypt.
+      - EMAIL=your@email.addr
+      # Any environment variables your hook needs
+      - MY_SECRET=1234567890123456789012345678901234567890
